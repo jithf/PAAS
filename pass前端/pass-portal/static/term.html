@@ -1,0 +1,24 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>远程连接 | 无道云平台</title>
+    <link rel="stylesheet" href="css/xterm.css">
+</head>
+<body>
+    <div id="xterm"></div>
+    <script type="application/javascript" src="js/xterm.js"></script>
+    <script type="application/javascript" src="addons/attach/attach.js"></script>
+
+    <script type="application/javascript">
+        var term = new Terminal({
+            cursorBlink: sessionStorage.getItem('terminalCursorBlink'),
+            rows: sessionStorage.getItem('terminalRows'),
+            cols: sessionStorage.getItem('terminalCols'),
+        });
+        term.open(document.getElementById('xterm'));
+        let socket = new WebSocket(sessionStorage.getItem('terminalUrl'));
+        term.attach(socket);
+        term.focus();
+    </script>
+</body>
+</html>
