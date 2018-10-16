@@ -1,0 +1,8 @@
+在tomcat容器中运行springboot???
+
+
+@Component   ？？？？
+ 
+
+
+
