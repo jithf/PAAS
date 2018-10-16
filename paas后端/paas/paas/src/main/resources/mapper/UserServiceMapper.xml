@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jit.edu.paas.mapper.UserServiceMapper">
+    <select id="listServiceByUserId" resultType="jit.edu.paas.domain.entity.UserService">
+        SELECT * FROM `user_service`, `user_project`
+        WHERE `user_service`.project_id = `user_project`.id
+        <if test="userId != null" >
+            AND `user_service`.user_id = #{userId}
+        </if>
+    </select>
+    <select id="hasBelong" resultType="java.lang.Boolean">
+        SELECT
+            Count( * )
+        FROM
+            `user_service`
+        WHERE
+            id = #{serviceId}
+            AND user_id = #{userId}
+    </select>
+    <update id="changeBelongProject">
+        UPDATE `user_service`
+        SET `project_id` = #{projectId}
+        WHERE `id` = #{serviceId}
+    </update>
+</mapper>

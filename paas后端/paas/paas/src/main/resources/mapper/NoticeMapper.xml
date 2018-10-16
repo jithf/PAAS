@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jit.edu.paas.mapper.NoticeMapper">
+
+    <insert id="saveNotice">
+        INSERT INTO `user_notice` ( id, title, content, type, sender, has_all )
+        VALUES
+            ( #{notice.id}, #{notice.title}, #{notice.content}, #{notice.type}, #{notice.sender}, #{notice.hasAll} )
+    </insert>
+    <insert id="saveNoticeDesc">
+        INSERT INTO `user_notice_desc` ( id, notice_id, receive, has_read )
+        VALUES
+            ( #{noticeDesc.id}, #{noticeDesc.noticeId}, #{noticeDesc.receive}, #{noticeDesc.hasRead} )
+    </insert>
+    <update id="readNotice">
+        UPDATE `user_notice_desc`
+        SET `has_read` = true
+        <where>
+            `receive` = #{userId}
+            <foreach collection="ids" item="id" open="and id in (" close=") " separator=",">
+                #{id}
+            </foreach>
+        </where>
+    </update>
+    <select id="listUnReadIds" resultType="java.lang.String">
+        SELECT d.id from user_notice AS n , user_notice_desc AS d
+        WHERE n.id = d.notice_id
+        AND d.has_read = false
+        AND d.receive = #{userId}
+        <if test="type != null" >
+            AND n.type =1
+        </if>
+    </select>
+    <select id="listUserNotice" resultType="jit.edu.paas.domain.dto.NoticeDTO">
+        SELECT
+        n.title,
+        n.content,
+        n.type,
+        n.sender,
+        l.username AS senderName,
+        n.has_all,
+        n.create_date,
+        d.*
+        FROM
+        `user_notice` AS `n`
+        LEFT JOIN `user_notice_desc` AS `d` ON `n`.id = `d`.notice_id
+        LEFT JOIN `sys_login` AS `l` ON `n`.sender = `l`.id
+            WHERE
+                `d`.receive = #{userId}
+                <if test="type != null" >
+                    AND `n`.type = #{type}
+                </if>
+    </select>
+    <select id="listSelfSendHistory" resultType="jit.edu.paas.domain.dto.NoticeDTO">
+        SELECT
+            n.title,
+            n.content,
+            n.type,
+            n.sender,
+            l.username AS receiveName,
+            n.has_all,
+            n.create_date,
+            d.*
+        FROM
+            `user_notice` AS `n`
+            LEFT JOIN `user_notice_desc` AS `d` ON `n`.id = `d`.notice_id
+            LEFT JOIN `sys_login` AS `l` ON `d`.receive = `l`.id
+        WHERE
+            `n`.sender = #{userId}
+    </select>
+    <select id="listSelfSendNotice" resultType="jit.edu.paas.domain.entity.UserNotice">
+            SELECT * from `user_notice` where `sender` = #{userId}
+    </select>
+    <select id="getSelfSendNoticeDTO" resultType="jit.edu.paas.domain.dto.NoticeDTO">
+        SELECT
+            n.title,
+            n.content,
+            n.type,
+            n.sender,
+            l.username AS receiveName,
+            n.has_all,
+            n.create_date,
+            d.*
+        FROM
+            `user_notice` AS `n`
+            LEFT JOIN `user_notice_desc` AS `d` ON `n`.id = `d`.notice_id
+            LEFT JOIN `sys_login` AS `l` ON `d`.receive = `l`.id
+        WHERE
+            `d`.notice_id = #{noticeId}
+    </select>
+    <select id="countUnread" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT COUNT(*) from `user_notice_desc` where receive = #{uid} and has_read = false
+    </select>
+    <delete id="deleteNotice">
+        DELETE from `user_notice_desc`
+       <where>
+            `receive` = #{userId}
+            <foreach collection="ids" item="id" open="and id in (" close=") " separator=",">
+                #{id}
+            </foreach>
+        </where>
+    </delete>
+</mapper>
