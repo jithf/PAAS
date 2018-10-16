@@ -1,0 +1,351 @@
+Docker中文文档：https://docs.docker-cn.com/
+
+Docker-client：https://github.com/spotify/docker-client
+Docker-client使用说明：https://github.com/spotify/docker-client/blob/master/docs/user_manual.md
+
+重新安装docker
+yum remove -y docker.x86_64
+rm -rf /var/lib/docker/  删除原有的依赖
+yum install *.rpm
+
+systemctl start docker.service
+systemctl status docker
+systemctl stop docker.service
+docker images 查看镜像 --no-trunch -all imageName -q name
+docker pull centos:7 拉取镜像
+docker rmi mysql:5.6.36 删除镜像 docker image rm [imageName] -f -no-pruse=fales 不删除父镜像
+docker save centos:7 > /root/filename.tar.gz 导出镜像、
+docker load < /root/filename.tar.gz 导入镜像
+docker build -t friendlyhello .
+docker search name
+
+
+下载镜像源更改
+vim /etc/docker/daemon.json
+修改
+{
+"registry-mirrors":["https://docker.mirrors.ustc.edu.cn"]
+}
+或
+{
+  "registry-mirrors": ["http://hub-mirror.c.163.com"]
+}
+
+开启remote API
+vim /lib/systemd/system/docker.service
+ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+#ExecStart=/usr/bin/dockerd
+
+重启docker
+systemctl daemon-reload 重新加载配置
+systemctl service docker restart 重新启动docker
+
+编写maven项目demo调用dockerAPI
+依赖：
+<dependency>
+    <groupId>com.spotify</groupId>
+    <artifactId>docker-client</artifactId>
+    <version>8.11.7</version>
+</dependency>
+源码
+public class Demo {
+    public static void main(String[] args) {
+        try {
+            DockerClient docker = DefaultDockerClient.builder()
+                    .uri(URI.create("http://192.168.122.1:2375"))
+                    .build();
+            List<Container> containerList = docker.listContainers();
+            System.out.println(containerList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+service firewalld stop 运行程序前关Centos闭防火墙
+参考
+Docker-client：https://github.com/spotify/docker-client
+Docker-client使用说明：https://github.com/spotify/docker-client/blob/master/docs/user_manual.md
+可视化界面：Portainer 
+
+docker运行
+docker run -it --name container-name image-name   /bin/bash  exit 或 docker container run hello-world
+docker exec -it my-tomcat /bin/bash 进入容器 容器中新建进程
+docker run -d --name 以守护进程启动镜像
+docker ps -a 查看所有启动的容器 或 docker container ls --all
+docker stop container-name/containerID 或 docker container kill
+docker start -i container-name/containerID
+docker rm container-name/containerID  二次e
+docker container start [containerID]
+docker container logs 看容器日志
+docker inspect containerId/name
+exit ctrl+p/q 退出容器
+
+sudo docker run -d --name my-tomcat -p 8888:8080 tomcat:7 /bin/bash
+sudo docker cp Desktop/demo2-0.0.1-SNAPSHOT.war my-tomcat:/usr/local/tomcat/webapps
+sudo docker attach containerId 进入容器
+sudo docker run --name test -d image /bin/bash -c "while true;do echo "hello world";sleep 1 done" 
+sudo docker container -pf logs 看容器日志 p时间 f(刷新）
+sudo docker commit containerId hf123/test
+sudo inspect name
+sudo docker top web 查看容器中的进程
+http://www.ruanyifeng.com/blog/2018/02/docker-tutorial.html
+docker数据卷 私有库
+
+
+写镜像文件
+1、写dockerfile
+# 将官方 Python 运行时用作父镜像
+FROM python:2.7-slim
+
+#镜像作者名
+MAINTAINER "HF12"
+
+# 将容器工作目录设置为 /app
+WORKDIR /app
+
+# 将当前目录内容复制到位于镜像中/app 
+ADD . /app  （有解压缩功能）
+
+# 将当前目录内容复制到位于镜像中/app 
+COPY ./test.txt /app/test  （没有解压缩功能）
+
+# 安装 requirements.txt 中指定的任何所需软件包
+RUN pip install -r requirements.txt(shell模式或exec模式）
+
+# 使端口 80 可供此容器外的环境使用
+EXPOSE 80 （可以多个端口）
+
+# 在容器启动时运行 (默认 可能会覆盖）
+CMD ["python", "app.py"](shell模式或exec模式）
+
+# 在容器启动时运行 (默认 不会覆盖 除非 docker run --entrypoint）
+ENTRYPOINT ["python", "app.py"](shell模式或exec模式）
+
+# 建立文件卷
+VOLUME ["/data"] 该镜像使用时会新建数据卷（不会共享）
+会xin
+# 定义环境变量
+ENV NAME World
+
+# USER 指明以什么用户在容器中执行指令
+USER test:用户组
+
+# ONBUILD 触发器 当作为基础镜像构建其他镜像才会触发
+ONBUILD pip install -r requirements.txt(shell模式或exec模式）
+
+
+#####docker build -t friendlyhello .####由dockerfile生成镜像 镜像-> 容器 -> cmd -> 镜像 -> 容器 -> cmd -> 镜像
+中间镜像的调试
+--no-cache 不使用缓存 （默认使用缓存）
+docker history 查看镜像构建过程
+
+Docker中文文档：https://docs.docker-cn.com/  docker集群 分布式 和其他技术的集成
+
+https://github.com/spotify/docker-client/blob/master/docs/user_manual.md#list-images
+https://docs.docker.com/engine/api/v1.37/#operation/ImageBuild
+https://test-dockerrr.readthedocs.io/en/latest/
+
+########################
+docker学习
+C/S架构 通过socket连接
+docker文件系统(只读） ：引导文件系统 + root文件系统 + Apache + ...
+container 镜像只可读 写时复制
+docker 依赖于LINUX Namespace 分离系统资源 control grous 资源分配控制  docker实现资源分配
+docker client -> host -> Registry
+docker serach image
+docker commit containerId hf123/test
+
+###docker网络学习#############################################################################
+docker 配置 /etc/default/docker 远程访问
+或 docker 远程访问 -H 或 设置环境变量 进行远程访问另一个docker
+
+docker 网络配置
+Linux 虚拟网桥 docker0的网络IP设置（一般不会用到）
+
+容器互联
+docker run --name containerName --link=containerName:代号 images command
+docker run -it --name cct333 --link=cct111:webtest hello:latest  用代号连防ip的变化
+
+docker 容器拒绝互联 --icc
+docker 配置 /etc/default/docker 末尾添加DOCKER_OPTS="--icc=false" 重启服务
+
+特定容器间的互联 --icc=false --link=containerName:代号 --iptables=true 至可让特定容器服务 不可让其他容器服务
+sudo -iptables -L -n  -F(清空iptables设置）
+
+容器与外部网络连接 ip_forward iptables 端口映射 限制ip访问
+ip_forward 是否流量转发 默认为true sysctl net.ipv4.conf.all.forwarding 查看ip_forward
+sudo -iptables -L -n -t(查看指定的表） filter
+docker run -it --name test -p 8080:80 imageName 端口映射
+iptbles -I DOCKER -s 198.83ip -d 目的ip -p TCP --dport 80 -j DROP  通过iptables限制ip访问（略）
+##########################################################################################
+
+docker 数据卷 数据持久化 独立于容器 存于宿主机 支持共享 容器可改变数据
+
+docker run -it --name test -v 宿主机文件名:容器中文件名:访问权限(ro/rw) hello:latest /bin/bash  挂载数据卷
+ 
+数据卷容器 docker run --volumes-from 数据卷容器名  #实现数据卷共享 仅仅传递数据卷配置 数据卷只要被使用就不会被删除
+
+数据卷容器备份
+docker run --volumes-from 数据卷容器名 -v $(pwd):/backup:wr image tar vcf（xvf) /backup/backup.tar 数据卷名
+
+#########################################################################
+
+容器跨主机连接
+通过网桥实现（不常用）看08-2
+通过Open vSwitch实现 看08-3
+通过weave实现 看08-4 （推荐使用）
+
+###########################################################################
+
+Docker Compose：是用来组装多容器应用的工具，可以在 Swarm集群中部署分布式应用。
+Docker Machine：是支持多平台安装Docker的工具，使用 Docker Machine，可以很方便地在笔记本、云平台及数据中心里安装Docker。
+Docker Swarm：是Docker社区原生提供的容器集群管理工具。
+
+##########################################################################
+
+swarm docker 集群
+##########参考###########
+https://blog.csdn.net/wfs1994/article/details/80601027
+https://blog.csdn.net/Coder_501/article/details/79352241
+https://blog.csdn.net/wanglei_storage/article/details/77508620
+
+1、安装docker machine
+curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine
+chmod +x /usr/local/bin/docker-machine
+
+安装virtualbox驱动
+配置源：
+# cat /etc/yum.repos.d/virtualbox.repo 
+[virtualbox]
+name=Oracle Linux / RHEL / CentOS-$releasever / $basearch - VirtualBox
+baseurl=http://download.virtualbox.org/virtualbox/rpm/el/$releasever/$basearch
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://www.virtualbox.org/download/oracle_vbox.asc
+
+#安装VirtualBox：
+yum search VirtualBox
+yum install -y VirtualBox-5.2
+/sbin/vboxconfig    # 重新加载VirtualBox服务
+
+2、创建虚拟主机 docker machine
+# docker-machine create -d virtualbox test
+# docker-machine ls
+# docker-machine env test  通过 env 命令来让后续操作目标主机
+# docker-machine ssh test
+
+docker machine 常用操作命令：
+active   查看活跃的 Docker 主机
+config   输出连接的配置信息
+create   创建一个 Docker 主机
+env      显示连接到某个主机需要的环境变量
+inspect  输出主机更多信息
+ip       获取主机地址
+kill     停止某个主机
+ls       列出所有管理的主机
+provision 重新设置一个已存在的主机
+regenerate-certs 为某个主机重新生成 TLS 认证信息
+restart  重启主机
+rm       删除某台主机
+ssh SSH  到主机上执行命令
+scp      在主机之间复制文件
+mount    挂载主机目录到本地
+start    启动一个主机
+status   查看主机状态
+stop     停止一个主机
+upgrade  更新主机 Docker 版本为最新
+url      获取主机的 URL
+version  输出 docker-machine 版本信息
+help     输出帮助信息
+
+# docker-machine COMMAND --help 查看参数
+
+获取添加的token
+# docker swarm join-token worker [--quiet]
+# docker swarm join-token manager [--quiet]
+
+3、建立集群 Docker Swarm
+
+Docker Swarm 提供 Docker 容器集群服务，是 Docker 官方对容器云生态进行支持的核心方案。
+使用它，用户可以将多个 Docker 主机封装为单个大型的虚拟 Docker 主机，快速打造一套容器云平台。
+
+节点
+管理节点：用于 Swarm 集群的管理，docker swarm 命令基本只能在管理节点执行
+（节点退出集群命令 docker swarm leave 可以在工作节点执行）。
+一个 Swarm 集群可以有多个管理节点，但只有一个管理节点可以成为 leader，leader 通过 raft 协议实现。
+
+工作节点：是任务执行节点，管理节点将服务 (service) 下发至工作节点执行。
+管理节点默认也作为工作节点。
+也可以通过配置让服务只运行在管理节点。
+
+replicated services 按照一定规则在各个工作节点上运行指定个数的任务（容器）。
+global services 每个工作节点上运行一个任务。
+两种模式通过 docker service create 的 --mode 参数指定。
+
+docker swarm 命令集合：
+docker swarm：集群管理，子命令有 init, join,join-token, leave, update
+
+docker node：节点管理，子命令有 demote, inspect,ls, promote, rm, ps, update
+
+docker service：服务管理，子命令有 create, inspect, ps, ls ,rm , scale, update
+，logs，rollback
+docker stack/deploy：试验特性，用于多应用部署，等正式版加进来再说。
+
+
+4、建立流程
+创建管理节点主机
+docker-machine create -d virtualbox manger
+docker-machine ssh manger
+docker swarm init --advertise-addr 192.168.99.101  执行 docker swarm init 命令的节点自动成为管理节点
+
+获取添加的token
+# docker swarm join-token worker [--quiet]
+# docker swarm join-token manager [--quiet]
+
+创建工作节点主机
+docker-machine create -d virtualbox worker1
+docker swarm join --token SWMTKN-1-2acj2brip56iee9p4hc7klx3i6ljnpykh5lx6ea3t9xlhounnv-70knqo263hphhse02gxuvja12 192.168.99.101:2377
+
+docker-machine create -d virtualbox worker2
+docker swarm join --token SWMTKN-1-2acj2brip56iee9p4hc7klx3i6ljnpykh5lx6ea3t9xlhounnv-70knqo263hphhse02gxuvja12 192.168.99.101:2377
+
+查看集群
+manager machine上执行 docker node ls 查看集群 
+
+新建服务
+docker service create --replicas 3 -p 80:80 --name nginx nginx
+
+查看服务
+使用 docker service ls 来查看当前 Swarm 集群运行的服务。
+使用 docker service ps 来查看某个服务的详情。
+使用 docker service logs 来查看某个服务的日志
+使用 docker service inspect --pretty serviceName 查看服务的详细信息
+
+服务伸缩
+可以使用 docker service scale 对一个服务运行的容器数量进行伸缩
+docker service scale nginx=5
+
+删除服务
+使用 docker service rm 来从 Swarm 集群移除某个服务。
+
+创建visualizer容器,用于在web上查看集群内的服务状态
+docker run -it -d -p 8080:8080 --name visualizer -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+
+将本地的8080端口映射到集群的80端口 宿主机 在外部网络通过8080端口访问集群内的my-web服务
+docker service update --publish-add 8080:80 my-web 
+
+
+https://www.cnblogs.com/franknihao/p/8490416.html
+https://yeasy.gitbooks.io/docker_practice/content/swarm_mode/secret.html
+https://mp.weixin.qq.com/s/7o8QxGydMTUe4Q7Tz46Diw
+
+
+
+#######################################docker network################################
+docker network create
+docker network connect
+docker network ls
+docker network rm
+docker network disconnect
+docker network inspect 容器名

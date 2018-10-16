@@ -1,0 +1,68 @@
+1、创建一个新项目 /project/create
+2、查看镜像列表，若没有所需则拉取 /image/list/local?type=1 /image/pull 镜像要求：mysql:5.7.21
+3、创建（MySQL）容器 
+/container/create
+{
+  "imageId": "d1cc2f24d7324ec791407a8e68a29554",
+  "containerName": "demo-mysql",
+  "projectId": "b2b09405f54c4cf3a9e70b4ec298b31a",
+  "envStr": "MYSQL_ROOT_PASSWORD=123456",
+  "destinationStr": "/var/lib/mysql", (可省略）
+  "portMapStr": {"3306": "10110"}
+}
+4、开启刚创建的容器  /container/start/{containerId}
+5、打开终端 进入容器内部 docker exec -it e502f2db26c2 sh
+   打开mysql，创建数据库demo。 
+方法二：通过dockerfile创建容器 参考链接：https://www.cnblogs.com/han-1034683568/p/6941337.html?utm_source=debugrun&utm_medium=referral
+6、修改程序demo的数据库连接配置，进行测试。
+
+###########################################################
+
+1、查看镜像列表，若没有所需则拉取 /image/list/local?type=1 /image/pull 镜像要求：tomcat:latest
+2、创建（tomcat）容器 
+/container/create
+{
+  "imageId": "77984ad1cd8a481bb64142ddb7626258",
+  "containerName": "demo-tomcat",
+  "projectId": "b2b09405f54c4cf3a9e70b4ec298b31a",
+  "destinationStr": "/usr/local/tomcat/webapps"
+  "portMapStr": {"8080": "18081"}
+}
+3、开启刚创建的容器  /container/start/{containerId}
+4、上传war包
+
+###########################################################
+
+1、查看镜像列表，若没有所需则拉取 /image/list/local?type=1 /image/pull 镜像要求：nginx:latest
+2、创建（nginx）容器 
+/container/create
+{
+  "imageId": "29952c38f59d44419f9d2cdaa8213b9f",
+  "containerName": "demo-nginx",
+  "projectId": "b2b09405f54c4cf3a9e70b4ec298b31a",
+  "destinationStr": "/etc/nginx/conf.d"
+  "portMapStr": {"80": "19999"}
+}
+3、开启刚创建的容器  /container/start/{containerId}
+4、更新配置文件 default.conf nginx.conf
+
+参考链接：https://blog.csdn.net/boling_cavalry/article/details/70194072
+          https://www.jianshu.com/p/39fa2b5272f8
+
+###########################################################
+
+1、查看镜像列表，若没有所需则拉取 /image/list/local?type=1 /image/pull 镜像要求：java:latest
+2、创建（java）容器 
+/container/create
+{
+  "imageId": "29952c38f59d44419f9d2cdaa8213b9f",
+  "containerName": "demo-java",
+  "projectId": "b2b09405f54c4cf3a9e70b4ec298b31a",
+  "destinationStr": "/var/tmp"
+  "portMapStr": {"8080": "29999"}
+  "cmdStr":"/bin/bash"
+}
+3、开启刚创建的容器  /container/start/{containerId}
+4、上传jar包
+
+源码文件 demo
